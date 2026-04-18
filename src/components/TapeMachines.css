@@ -1,0 +1,31 @@
+.tape-machines {
+  margin: 14px auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #080d14;
+  max-width: 1130px;
+  width: 100%;
+}
+
+.reel {
+  transform-origin: 0 0;
+}
+
+.reel--spinning {
+  animation: reelCw 4s linear infinite;
+}
+
+.reel--spinning.reel--ccw {
+  animation-name: reelCcw;
+}
+
+@keyframes reelCw {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes reelCcw {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}

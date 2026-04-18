@@ -1,0 +1,239 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0e0e0e;
+  --panel: #161616;
+  --border: #2a2a2a;
+  --accent: #e8a020;
+  --accent-dim: #7a5010;
+  --text: #c8c8c8;
+  --text-dim: #666;
+  --white-key: #d8d0c8;
+  --black-key: #1a1a1a;
+  --key-active: #e8a020;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'SF Mono', 'Fira Mono', 'Consolas', monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── Layout ─────────────────────────────────────────────── */
+
+.app {
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
+  height: 100vh;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 32px;
+  overflow-y: auto;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.header-spacer {
+  flex: 1;
+}
+
+header h1 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+}
+
+.status-dot.active {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+.stop-btn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 120ms, color 120ms;
+}
+
+.stop-btn:hover {
+  border-color: #e83020;
+  color: #e83020;
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1px;
+  background: var(--border);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin: 16px 0;
+  align-self: start;
+}
+
+.panel {
+  background: var(--panel);
+  padding: 16px;
+}
+
+.panel-title {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+}
+
+.knobs-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+}
+
+.knobs-grid--3 {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+.meter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.meter-label {
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.meter-track {
+  flex: 1;
+  height: 4px;
+  background: #222;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+#meter-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(to right, #3a7a20, #e8a020, #e83020);
+  border-radius: 2px;
+  transition: width 50ms linear;
+}
+
+/* ── Knob ───────────────────────────────────────────────── */
+
+.knob {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  touch-action: none;
+}
+
+.knob svg {
+  display: block;
+  cursor: ns-resize;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.knob-value {
+  font-size: 12px;
+  color: var(--accent);
+  margin-top: 2px;
+  min-height: 1em;
+  text-align: center;
+  pointer-events: none;
+}
+
+.knob-label {
+  font-size: 13px;
+  color: var(--text-dim);
+  text-align: center;
+  letter-spacing: 0.08em;
+  margin-top: 1px;
+  pointer-events: none;
+}
+
+/* ── Keyboard ───────────────────────────────────────────── */
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 14px 0 20px;
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+.keyboard {
+  position: relative;
+  display: flex;
+  height: 80px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.key {
+  border-radius: 0 0 4px 4px;
+  cursor: pointer;
+  transition: background 60ms;
+  flex-shrink: 0;
+}
+
+.key--white {
+  width: 32px;
+  height: 80px;
+  background: var(--white-key);
+  border: 1px solid #888;
+  z-index: 1;
+}
+
+.key--black {
+  width: 20px;
+  height: 52px;
+  background: var(--black-key);
+  border: 1px solid #000;
+  margin-left: -10px;
+  margin-right: -10px;
+  z-index: 2;
+}
+
+.key--active {
+  background: var(--key-active) !important;
+}
