@@ -59,7 +59,8 @@ function Reel({ cx, cy, tapeR = 30, ccw = false, isRunning }) {
 }
 
 // phase: 'body' = everything except reels, 'reels' = reels only, default = all
-function Machine({ x, y, w = 270, h = 185, isRunning, leftTapeR = 32, rightTapeR = 26, audioLevel = 0, label, phase }) {
+// reels: 'both' | 'left' | 'right' — which reels are physically present
+function Machine({ x, y, w = 270, h = 185, isRunning, leftTapeR = 32, rightTapeR = 26, audioLevel = 0, label, phase, reels = 'both' }) {
   const lx = x + 74          // left reel cx
   const ly = y + 96          // left reel cy
   const rx = x + w - 74      // right reel cx
@@ -127,38 +128,68 @@ function Machine({ x, y, w = 270, h = 185, isRunning, leftTapeR = 32, rightTapeR
           <circle cx={x + w - 18} cy={y + 18} r="2.5" fill="#3c556f" />
         </g>
 
-        {/* Traveling tape — departs from the outer edge of the wound tape roll.
-            Left reel: exit at ~74° (toward guide post), right reel: exit at ~150° (window 2). */}
+        {/* Tape path — left reel → left guide → across heads → right guide → right reel.
+            Only draw segments for reels that are physically present. */}
         {(() => {
-          // Left exit: tape roll outer edge at angle 74° (in window 1: 20°–100°)
-          const lEx = lx + Math.round(leftTapeR  * 0.276)   // cos 74°
-          const lEy = ly + Math.round(leftTapeR  * 0.961)   // sin 74°
-          // Right exit: tape roll outer edge at angle 150° (in window 2: 140°–220°)
-          const rEx = rx - Math.round(rightTapeR * 0.866)   // cos 150° = -0.866
-          const rEy = ry + Math.round(rightTapeR * 0.5)     // sin 150°
+          // Left reel (supply): tape exits lower-left (106° = mirror of 74°)
+          const lEx = lx - Math.round(leftTapeR  * 0.276)
+          const lEy = ly + Math.round(leftTapeR  * 0.961)
+          // Right reel (take-up): tape enters lower-right (74°)
+          const rEx = rx + Math.round(rightTapeR * 0.276)
+          const rEy = ry + Math.round(rightTapeR * 0.961)
           return <>
-            <path
-              d={`M ${lEx} ${lEy}
-                  C ${lx + 8} ${ly + 62} ${hx - 40} ${hy - 6} ${hx - 38} ${hy + 4}
-                  L ${hx + 38} ${hy + 4}
-                  C ${hx + 38} ${hy - 20} ${rx - 40} ${ry + 45} ${rEx} ${rEy}`}
-              fill="none" stroke="#7a4228" strokeWidth="3.5" opacity="0.9"
-            />
-            <path
-              d={`M ${lEx} ${lEy - 2}
-                  C ${lx + 8} ${ly + 60} ${hx - 40} ${hy - 8} ${hx - 38} ${hy + 2}
-                  L ${hx + 38} ${hy + 2}
-                  C ${hx + 38} ${hy - 22} ${rx - 40} ${ry + 43} ${rEx} ${rEy - 2}`}
-              fill="none" stroke="#c06030" strokeWidth="1" opacity="0.35"
-            />
+            {(reels === 'both' || reels === 'left') && <>
+              <path d={`M ${lEx} ${lEy} C ${lx - 8} ${ly + 62} ${hx - 80} ${hy - 6} ${hx - 78} ${hy + 4}`}
+                fill="none" stroke="#7a4228" strokeWidth="3.5" opacity="0.9" />
+              <path d={`M ${lEx} ${lEy - 2} C ${lx - 8} ${ly + 60} ${hx - 80} ${hy - 8} ${hx - 78} ${hy + 2}`}
+                fill="none" stroke="#c06030" strokeWidth="1" opacity="0.35" />
+            </>}
+            <line x1={hx - 78} y1={hy + 4} x2={hx + 78} y2={hy + 4} stroke="#7a4228" strokeWidth="3.5" opacity="0.9" />
+            <line x1={hx - 78} y1={hy + 2} x2={hx + 78} y2={hy + 2} stroke="#c06030" strokeWidth="1" opacity="0.35" />
+            {(reels === 'both' || reels === 'right') && <>
+              <path d={`M ${hx + 78} ${hy + 4} C ${hx + 80} ${hy - 6} ${rx + 8} ${ry + 62} ${rEx} ${rEy}`}
+                fill="none" stroke="#7a4228" strokeWidth="3.5" opacity="0.9" />
+              <path d={`M ${hx + 78} ${hy + 2} C ${hx + 80} ${hy - 8} ${rx + 8} ${ry + 60} ${rEx} ${rEy - 2}`}
+                fill="none" stroke="#c06030" strokeWidth="1" opacity="0.35" />
+            </>}
           </>
         })()}
 
+        {/* Empty spindles where inner reels have been removed */}
+        {(reels === 'left') && (() => {
+          const bx = rx, by = ry
+          return <g>
+            <circle cx={bx} cy={by} r={REEL_R - 16} fill="#111820" />
+            <circle cx={bx} cy={by} r={REEL_R - 16} fill="none" stroke="#0a0f16" strokeWidth="1.5" />
+            <circle cx={bx} cy={by} r={22} fill="#2a2e34" stroke="#1e2228" strokeWidth="1" />
+            {[0, 90, 180, 270].map(a => {
+              const rad = a * Math.PI / 180
+              return <circle key={a} cx={bx + Math.cos(rad) * 13} cy={by + Math.sin(rad) * 13} r="2.5" fill="#1a1e24" stroke="#3a3e44" strokeWidth="0.75" />
+            })}
+            <circle cx={bx} cy={by} r="5" fill="#1c2026" stroke="#3a3e44" strokeWidth="0.75" />
+            <circle cx={bx} cy={by} r="2" fill="#101418" />
+          </g>
+        })()}
+        {(reels === 'right') && (() => {
+          const bx = lx, by = ly
+          return <g>
+            <circle cx={bx} cy={by} r={REEL_R - 16} fill="#111820" />
+            <circle cx={bx} cy={by} r={REEL_R - 16} fill="none" stroke="#0a0f16" strokeWidth="1.5" />
+            <circle cx={bx} cy={by} r={22} fill="#2a2e34" stroke="#1e2228" strokeWidth="1" />
+            {[0, 90, 180, 270].map(a => {
+              const rad = a * Math.PI / 180
+              return <circle key={a} cx={bx + Math.cos(rad) * 13} cy={by + Math.sin(rad) * 13} r="2.5" fill="#1a1e24" stroke="#3a3e44" strokeWidth="0.75" />
+            })}
+            <circle cx={bx} cy={by} r="5" fill="#1c2026" stroke="#3a3e44" strokeWidth="0.75" />
+            <circle cx={bx} cy={by} r="2" fill="#101418" />
+          </g>
+        })()}
+
         {/* Guide posts flanking head assembly */}
-        <circle cx={hx - 38} cy={hy + 4} r="5" fill="#2a3848" stroke="#4a5c70" strokeWidth="1.5" />
-        <circle cx={hx - 38} cy={hy + 4} r="2" fill="#3a4e64" />
-        <circle cx={hx + 38} cy={hy + 4} r="5" fill="#2a3848" stroke="#4a5c70" strokeWidth="1.5" />
-        <circle cx={hx + 38} cy={hy + 4} r="2" fill="#3a4e64" />
+        <circle cx={hx - 78} cy={hy + 4} r="5" fill="#2a3848" stroke="#4a5c70" strokeWidth="1.5" />
+        <circle cx={hx - 78} cy={hy + 4} r="2" fill="#3a4e64" />
+        <circle cx={hx + 78} cy={hy + 4} r="5" fill="#2a3848" stroke="#4a5c70" strokeWidth="1.5" />
+        <circle cx={hx + 78} cy={hy + 4} r="2" fill="#3a4e64" />
 
         {/* Head assembly recess */}
         <rect x={hx - 30} y={hy - 16} width={60} height={36} rx="2" fill="#090e14" />
@@ -199,8 +230,12 @@ function Machine({ x, y, w = 270, h = 185, isRunning, leftTapeR = 32, rightTapeR
       </>}
 
       {showReels && <>
-        <Reel cx={lx} cy={ly} tapeR={leftTapeR}  ccw={true}  isRunning={isRunning} />
-        <Reel cx={rx} cy={ry} tapeR={rightTapeR} ccw={false} isRunning={isRunning} />
+        {(reels === 'both' || reels === 'left') && (
+          <Reel cx={lx} cy={ly} tapeR={leftTapeR}  ccw={true}  isRunning={isRunning} />
+        )}
+        {(reels === 'both' || reels === 'right') && (
+          <Reel cx={rx} cy={ry} tapeR={rightTapeR} ccw={false} isRunning={isRunning} />
+        )}
       </>}
 
     </g>
@@ -212,18 +247,13 @@ export function TapeMachines({ isRunning, audioLevel }) {
   const m1x = 10,  m1y = 22, mw = 268, mh = 215
   const m2x = 442, m2y = 22
 
-  // Inter-machine tape: exits lower-right of M1's right reel, enters lower-left of M2's left reel.
-  // Both anchor points are ≈ REEL_R from the reel center (right on the rim).
-  // Drawn BEFORE machines so the reel discs render on top of it.
-  const m1RightReelCx = m1x + mw - 74          // 204
-  const m1RightReelCy = m1y + 93               // 115
-  const m2LeftReelCx  = m2x + 74               // 516
-  const m2LeftReelCy  = m2y + 96               // 118
-  const tapeExitX  = m1RightReelCx + 28        // 232 — lower-right of M1 right reel (on rim)
-  const tapeExitY  = m1RightReelCy + 44        // 159
-  const tapeEntryX = m2LeftReelCx  - 28        // 488 — lower-left of M2 left reel (on rim)
-  const tapeEntryY = m2LeftReelCy  + 44        // 162
-  const tapeMidY   = Math.max(tapeExitY, tapeEntryY) + 18  // gentle droop = 180
+  // Inter-machine tape: exits M1's right guide post, enters M2's left guide post.
+  // Both guide posts are at hx±38, hy+4 — same height, so tape is nearly horizontal.
+  const m1hx = m1x + mw / 2, m1hy = m1y + 170
+  const m2hx = m2x + mw / 2, m2hy = m2y + 170
+  const exitX  = m1hx + 78, exitY  = m1hy + 4
+  const entryX = m2hx - 78, entryY = m2hy + 4
+  const droopY = Math.max(exitY, entryY) + 10
 
   return (
     <div className="tape-machines">
@@ -242,39 +272,37 @@ export function TapeMachines({ isRunning, audioLevel }) {
         <rect width={W} height={H} fill="#080d14" />
 
         {/* Pass 1: machine bodies (below the inter-machine tape) */}
-        <Machine phase="body"
+        <Machine phase="body" reels="left"
           x={m1x} y={m1y} w={mw} h={mh}
           isRunning={isRunning} audioLevel={audioLevel}
-          leftTapeR={42} rightTapeR={26} label="REVOX B77 · REC"
+          leftTapeR={42} label="REVOX B77 · REC"
         />
-        <Machine phase="body"
+        <Machine phase="body" reels="right"
           x={m2x} y={m2y} w={mw} h={mh}
           isRunning={isRunning} audioLevel={audioLevel}
-          leftTapeR={30} rightTapeR={40} label="REVOX B77 · PLAY"
+          rightTapeR={40} label="REVOX B77 · PLAY"
         />
 
-        {/* Inter-machine tape — above machine bodies, below reels */}
+        {/* Inter-machine tape — right guide post of M1 to left guide post of M2 */}
         <path
-          d={`M ${tapeExitX} ${tapeExitY}
-              C ${tapeExitX + 55} ${tapeMidY} ${tapeEntryX - 55} ${tapeMidY} ${tapeEntryX} ${tapeEntryY}`}
+          d={`M ${exitX} ${exitY} C ${exitX + 60} ${droopY} ${entryX - 60} ${droopY} ${entryX} ${entryY}`}
           fill="none" stroke="#7a4228" strokeWidth="3.5" opacity="0.85"
         />
         <path
-          d={`M ${tapeExitX} ${tapeExitY - 2}
-              C ${tapeExitX + 55} ${tapeMidY - 2} ${tapeEntryX - 55} ${tapeMidY - 2} ${tapeEntryX} ${tapeEntryY - 2}`}
+          d={`M ${exitX} ${exitY - 2} C ${exitX + 60} ${droopY - 2} ${entryX - 60} ${droopY - 2} ${entryX} ${entryY - 2}`}
           fill="none" stroke="#a86040" strokeWidth="1" opacity="0.4"
         />
 
         {/* Pass 2: reels */}
-        <Machine phase="reels"
+        <Machine phase="reels" reels="left"
           x={m1x} y={m1y} w={mw} h={mh}
           isRunning={isRunning} audioLevel={audioLevel}
-          leftTapeR={42} rightTapeR={26} label="REVOX B77 · REC"
+          leftTapeR={42} label="REVOX B77 · REC"
         />
-        <Machine phase="reels"
+        <Machine phase="reels" reels="right"
           x={m2x} y={m2y} w={mw} h={mh}
           isRunning={isRunning} audioLevel={audioLevel}
-          leftTapeR={30} rightTapeR={40} label="REVOX B77 · PLAY"
+          rightTapeR={40} label="REVOX B77 · PLAY"
         />
 
       </svg>
