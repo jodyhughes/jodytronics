@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { loadPresets, savePresets } from '../audio/presets.js'
 import './Presets.css'
 
-export function Presets({ currentSynth, currentDelay, onLoad }) {
+export function Presets({ currentSynth, currentDelay, currentWidener, onLoad }) {
   const [presets, setPresets] = useState(() => loadPresets())
   const [selected, setSelected] = useState('')
   const [name, setName] = useState('')
@@ -11,7 +11,7 @@ export function Presets({ currentSynth, currentDelay, onLoad }) {
   const save = () => {
     const trimmed = name.trim()
     if (!trimmed) return
-    const preset = { name: trimmed, synth: currentSynth, delay: currentDelay }
+    const preset = { name: trimmed, synth: currentSynth, delay: currentDelay, widener: currentWidener }
     const updated = [...presets.filter(p => p.name !== trimmed), preset]
       .sort((a, b) => a.name.localeCompare(b.name))
     savePresets(updated)

@@ -73,6 +73,11 @@ export class TapeDelay {
 
     this._masterGain.connect(this.output)
 
+    // Public tap of the wet-only signal for metering
+    this.wetTap = ctx.createGain()
+    this.wetTap.gain.value = 1
+    this._hfFilter.connect(this.wetTap)
+
     // Wow/flutter → delay time
     this._wowLfo.connect(this._wowDepth)
     this._flutterLfo.connect(this._flutterDepth)

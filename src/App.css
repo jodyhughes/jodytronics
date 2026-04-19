@@ -54,25 +54,29 @@ header {
   flex: 1;
 }
 
+.header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
 header h1 {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
   color: var(--accent);
+  line-height: 1;
 }
 
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent-dim);
+.header-subtitle {
+  margin-top: 5px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
 }
 
-.status-dot.active {
-  background: var(--accent);
-  box-shadow: 0 0 6px var(--accent);
-}
 
 .stop-btn {
   margin-left: auto;

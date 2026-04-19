@@ -1,3 +1,5 @@
+import { useRef } from 'react'
+
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 const BLACK_SEMITONES = new Set([1, 3, 6, 8, 10])
 
@@ -23,12 +25,17 @@ function keyVelocity(e, key) {
   return Math.max(0.05, Math.min(1, y))
 }
 
-export function Keyboard({ onNoteOn, onNoteOff, activeMidi }) {
+export function Keyboard({ onNoteOn, onNoteOff, activeMidis }) {
+  // Track which midi note each pointer is holding, for correct per-finger noteOff
+  const pointerNoteRef = useRef(new Map())
+
   const onPointerDown = (e) => {
     const key = e.target.closest('[data-midi]')
     if (!key) return
     e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
     const midi = parseInt(key.dataset.midi)
+    pointerNoteRef.current.set(e.pointerId, midi)
     onNoteOn?.(midiToFreq(midi), midi, keyVelocity(e, key))
   }
 
@@ -38,9 +45,18 @@ export function Keyboard({ onNoteOn, onNoteOff, activeMidi }) {
     const key = el?.closest('[data-midi]')
     if (!key) return
     const midi = parseInt(key.dataset.midi)
-    if (midi !== activeMidi) {
+    const prev = pointerNoteRef.current.get(e.pointerId)
+    if (midi !== prev) {
+      if (prev != null) onNoteOff?.(prev)
+      pointerNoteRef.current.set(e.pointerId, midi)
       onNoteOn?.(midiToFreq(midi), midi, keyVelocity(e, key))
     }
+  }
+
+  const onPointerUp = (e) => {
+    const midi = pointerNoteRef.current.get(e.pointerId)
+    if (midi != null) onNoteOff?.(midi)
+    pointerNoteRef.current.delete(e.pointerId)
   }
 
   return (
@@ -48,13 +64,13 @@ export function Keyboard({ onNoteOn, onNoteOff, activeMidi }) {
       className="keyboard"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
-      onPointerUp={() => onNoteOff?.()}
-      onPointerLeave={() => onNoteOff?.()}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
     >
       {KEYS.map(({ midi, black, label }) => (
         <div
           key={midi}
-          className={`key ${black ? 'key--black' : 'key--white'} ${activeMidi === midi ? 'key--active' : ''}`}
+          className={`key ${black ? 'key--black' : 'key--white'} ${activeMidis?.has(midi) ? 'key--active' : ''}`}
           data-midi={midi}
           title={label}
         />

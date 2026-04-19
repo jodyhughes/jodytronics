@@ -2,11 +2,16 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { resumeContext } from './audio/audioContext.js'
 import { Synth } from './audio/Synth.js'
 import { TapeDelay } from './audio/TapeDelay.js'
+import { StereoWidener } from './audio/StereoWidener.js'
 import { MidiController } from './audio/MidiController.js'
 import { Knob } from './components/Knob.jsx'
 import { Keyboard } from './components/Keyboard.jsx'
 import { TapeMachines } from './components/TapeMachines.jsx'
 import { Presets } from './components/Presets.jsx'
+
+const WIDENER_DEFAULTS = {
+  width: 0.4,
+}
 
 const SYNTH_DEFAULTS = {
   tune: 0,
@@ -31,6 +36,7 @@ const DELAY_DEFAULTS = {
 export default function App() {
   const synthRef = useRef(null)
   const delayRef = useRef(null)
+  const widenerRef = useRef(null)
   const masterGainRef = useRef(null)
   const audioReadyRef = useRef(false)
   const midiRef = useRef(null)
@@ -38,6 +44,7 @@ export default function App() {
 
   const [synthParams, setSynthParams] = useState(SYNTH_DEFAULTS)
   const [delayParams, setDelayParams] = useState(DELAY_DEFAULTS)
+  const [widenerParams, setWidenerParams] = useState(WIDENER_DEFAULTS)
   const [volume, setVolume] = useState(0.8)
 
   const initAudio = useCallback(async () => {
@@ -48,6 +55,7 @@ export default function App() {
 
     const synth = new Synth()
     const delay = new TapeDelay()
+    const widener = new StereoWidener()
     const ctx = synth.output.context
 
     const masterGain = ctx.createGain()
@@ -55,39 +63,53 @@ export default function App() {
 
     // Hard limiter — prevents feedback runaway from blowing speakers
     const limiter = ctx.createDynamicsCompressor()
-    limiter.threshold.value = -12  // start limiting at -12 dBFS
-    limiter.knee.value = 0          // hard knee
-    limiter.ratio.value = 20        // brick-wall behaviour
-    limiter.attack.value = 0.001    // 1ms — catch transients immediately
+    limiter.threshold.value = -12
+    limiter.knee.value = 0
+    limiter.ratio.value = 20
+    limiter.attack.value = 0.001
     limiter.release.value = 0.1
 
     synth.output.connect(delay.input)
-    delay.output.connect(masterGain)
+    delay.output.connect(widener.input)
+    widener.output.connect(masterGain)
     masterGain.connect(limiter)
     limiter.connect(ctx.destination)
 
     synthRef.current = synth
     delayRef.current = delay
+    widenerRef.current = widener
     masterGainRef.current = masterGain
     setIsRunning(true)
 
     // Apply current state to freshly-created engine
     Object.entries(SYNTH_DEFAULTS).forEach(([k, v]) => { synth[k] = v })
     Object.entries(DELAY_DEFAULTS).forEach(([k, v]) => { delay[k] = v })
+    Object.entries(WIDENER_DEFAULTS).forEach(([k, v]) => { widener[k] = v })
 
-    // Level meter (pre-volume — measures signal before master gain)
-    const analyser = ctx.createAnalyser()
-    analyser.fftSize = 256
-    delay.output.connect(analyser)
-    const buf = new Float32Array(analyser.fftSize)
+    // Dry analyser — synth output only (left machine meter)
+    const dryAnalyser = ctx.createAnalyser()
+    dryAnalyser.fftSize = 256
+    synth.output.connect(dryAnalyser)
+
+    // Wet analyser — delayed signal only (right machine meter)
+    const wetAnalyser = ctx.createAnalyser()
+    wetAnalyser.fftSize = 256
+    delay.wetTap.connect(wetAnalyser)
+
+    const dryBuf = new Float32Array(dryAnalyser.fftSize)
+    const wetBuf = new Float32Array(wetAnalyser.fftSize)
+
     const tick = () => {
-      analyser.getFloatTimeDomainData(buf)
-      let peak = 0
-      for (let i = 0; i < buf.length; i++) peak = Math.max(peak, Math.abs(buf[i]))
+      dryAnalyser.getFloatTimeDomainData(dryBuf)
+      wetAnalyser.getFloatTimeDomainData(wetBuf)
+      let dryPeak = 0, wetPeak = 0
+      for (let i = 0; i < dryBuf.length; i++) dryPeak = Math.max(dryPeak, Math.abs(dryBuf[i]))
+      for (let i = 0; i < wetBuf.length; i++) wetPeak = Math.max(wetPeak, Math.abs(wetBuf[i]))
       if (meterBarRef.current) {
-        meterBarRef.current.style.width = Math.min(100, peak * 300) + '%'
+        meterBarRef.current.style.width = Math.min(100, dryPeak * 300) + '%'
       }
-      setAudioLevel(Math.min(1, peak * 3))
+      setAudioLevelDry(Math.min(1, dryPeak * 3))
+      setAudioLevelWet(Math.min(1, wetPeak * 3))
       requestAnimationFrame(tick)
     }
     tick()
@@ -95,12 +117,12 @@ export default function App() {
     // MIDI
     midiRef.current = new MidiController({
       onNoteOn: (freq, midi, velocity) => {
-        synth.noteOn(freq, velocity)
-        setActiveMidi(midi)
+        synth.noteOn(freq, velocity, midi)
+        setActiveMidis(s => new Set([...s, midi]))
       },
-      onNoteOff: () => {
-        synth.noteOff()
-        setActiveMidi(null)
+      onNoteOff: (midi) => {
+        synth.noteOff(midi)
+        setActiveMidis(s => { const n = new Set(s); n.delete(midi); return n })
       },
       onCc: (cc, value) => {
         if (cc === 1) updateSynthParam('cutoff', 200 + value * 7800)
@@ -109,9 +131,10 @@ export default function App() {
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const [activeMidi, setActiveMidi] = useState(null)
+  const [activeMidis, setActiveMidis] = useState(new Set())
   const [isRunning, setIsRunning] = useState(false)
-  const [audioLevel, setAudioLevel] = useState(0)
+  const [audioLevelDry, setAudioLevelDry] = useState(0)
+  const [audioLevelWet, setAudioLevelWet] = useState(0)
 
   const updateSynthParam = useCallback((key, value) => {
     setSynthParams(p => ({ ...p, [key]: value }))
@@ -123,22 +146,27 @@ export default function App() {
     if (delayRef.current) delayRef.current[key] = value
   }, [])
 
+  const updateWidenerParam = useCallback((key, value) => {
+    setWidenerParams(p => ({ ...p, [key]: value }))
+    if (widenerRef.current) widenerRef.current[key] = value
+  }, [])
+
   const handleNoteOn = useCallback(async (freq, midi, velocity = 1) => {
     await initAudio()
-    synthRef.current?.noteOn(freq, velocity)
-    setActiveMidi(midi)
+    synthRef.current?.noteOn(freq, velocity, midi)
+    setActiveMidis(s => new Set([...s, midi]))
     setIsRunning(true)
   }, [initAudio])
 
-  const handleNoteOff = useCallback(() => {
-    synthRef.current?.noteOff()
-    setActiveMidi(null)
+  const handleNoteOff = useCallback((midi) => {
+    synthRef.current?.noteOff(midi)
+    setActiveMidis(s => { const n = new Set(s); n.delete(midi); return n })
   }, [])
 
   const handleStop = useCallback(() => {
     synthRef.current?.noteOff()
     delayRef.current?.stop()
-    setActiveMidi(null)
+    setActiveMidis(new Set())
     setIsRunning(false)
   }, [])
 
@@ -152,8 +180,10 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <h1>Jodytronics</h1>
-        <div className={`status-dot ${audioReadyRef.current ? 'active' : ''}`} />
+        <div className="header-title">
+          <h1>Jodytronics</h1>
+          <p className="header-subtitle">A web app version of Frippertronics</p>
+        </div>
         <div className="header-spacer" />
         <div className="header-meter">
           <div className="meter-track">
@@ -174,14 +204,16 @@ export default function App() {
         <button className="stop-btn" onClick={handleStop}>stop</button>
       </header>
 
-      <TapeMachines isRunning={isRunning} audioLevel={audioLevel} />
+      <TapeMachines isRunning={isRunning} audioLevelDry={audioLevelDry} audioLevelWet={audioLevelWet} />
 
       <Presets
         currentSynth={synthParams}
         currentDelay={delayParams}
-        onLoad={({ synth, delay }) => {
+        currentWidener={widenerParams}
+        onLoad={({ synth, delay, widener }) => {
           Object.entries(synth).forEach(([k, v]) => updateSynthParam(k, v))
           Object.entries(delay).forEach(([k, v]) => updateDelayParam(k, v))
+          if (widener) Object.entries(widener).forEach(([k, v]) => updateWidenerParam(k, v))
         }}
       />
 
@@ -189,7 +221,7 @@ export default function App() {
 
         <div className="panel" id="delay-panel">
           <div className="panel-title">Tape Delay</div>
-          <div className="knobs-grid knobs-grid--3">
+          <div className="knobs-grid">
             <Knob label="delay time" min={0.1} max={30} value={delayParams.delayTime} defaultValue={4} decimals={1} unit="s"
               onChange={v => updateDelayParam('delayTime', v)} />
             <Knob label="feedback" min={0} max={0.95} value={delayParams.feedback} defaultValue={0.5} decimals={2}
@@ -202,6 +234,8 @@ export default function App() {
               onChange={v => updateDelayParam('hfDamping', v)} />
             <Knob label="wet mix" min={0} max={1} value={delayParams.wet} defaultValue={0.5} decimals={2}
               onChange={v => updateDelayParam('wet', v)} />
+            <Knob label="width" min={0} max={1} value={widenerParams.width} defaultValue={0.4} decimals={2}
+              onChange={v => updateWidenerParam('width', v)} />
           </div>
         </div>
 
@@ -229,7 +263,7 @@ export default function App() {
       </div>
 
       <footer>
-        <Keyboard onNoteOn={handleNoteOn} onNoteOff={handleNoteOff} activeMidi={activeMidi} />
+        <Keyboard onNoteOn={handleNoteOn} onNoteOff={handleNoteOff} activeMidis={activeMidis} />
       </footer>
     </div>
   )
