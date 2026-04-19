@@ -6,6 +6,7 @@ import { MidiController } from './audio/MidiController.js'
 import { Knob } from './components/Knob.jsx'
 import { Keyboard } from './components/Keyboard.jsx'
 import { TapeMachines } from './components/TapeMachines.jsx'
+import { Presets } from './components/Presets.jsx'
 
 const SYNTH_DEFAULTS = {
   tune: 0,
@@ -37,7 +38,7 @@ export default function App() {
 
   const [synthParams, setSynthParams] = useState(SYNTH_DEFAULTS)
   const [delayParams, setDelayParams] = useState(DELAY_DEFAULTS)
-  const [volume, setVolume] = useState(0.4)
+  const [volume, setVolume] = useState(0.8)
 
   const initAudio = useCallback(async () => {
     if (audioReadyRef.current) return
@@ -93,8 +94,8 @@ export default function App() {
 
     // MIDI
     midiRef.current = new MidiController({
-      onNoteOn: (freq, midi) => {
-        synth.noteOn(freq)
+      onNoteOn: (freq, midi, velocity) => {
+        synth.noteOn(freq, velocity)
         setActiveMidi(midi)
       },
       onNoteOff: () => {
@@ -122,9 +123,9 @@ export default function App() {
     if (delayRef.current) delayRef.current[key] = value
   }, [])
 
-  const handleNoteOn = useCallback(async (freq, midi) => {
+  const handleNoteOn = useCallback(async (freq, midi, velocity = 1) => {
     await initAudio()
-    synthRef.current?.noteOn(freq)
+    synthRef.current?.noteOn(freq, velocity)
     setActiveMidi(midi)
     setIsRunning(true)
   }, [initAudio])
@@ -154,13 +155,17 @@ export default function App() {
         <h1>Jodytronics</h1>
         <div className={`status-dot ${audioReadyRef.current ? 'active' : ''}`} />
         <div className="header-spacer" />
+        <div className="header-meter">
+          <div className="meter-track">
+            <div id="meter-bar" ref={meterBarRef} />
+          </div>
+          <span className="meter-label">level</span>
+        </div>
         <Knob
-          label="vol" min={0} max={1} value={volume} defaultValue={0.4} decimals={2}
+          label="vol" min={0} max={1} value={volume} defaultValue={0.8} decimals={2}
           onChange={v => {
             setVolume(v)
             if (masterGainRef.current) {
-              // Exponential curve: knob 0-1 maps to gain 0-0.3
-              // Gives fine control at low levels, hard ceiling at top
               const gain = v === 0 ? 0 : 0.3 * Math.pow(v, 2.5)
               masterGainRef.current.gain.setTargetAtTime(gain, masterGainRef.current.context.currentTime, 0.02)
             }
@@ -170,6 +175,15 @@ export default function App() {
       </header>
 
       <TapeMachines isRunning={isRunning} audioLevel={audioLevel} />
+
+      <Presets
+        currentSynth={synthParams}
+        currentDelay={delayParams}
+        onLoad={({ synth, delay }) => {
+          Object.entries(synth).forEach(([k, v]) => updateSynthParam(k, v))
+          Object.entries(delay).forEach(([k, v]) => updateDelayParam(k, v))
+        }}
+      />
 
       <div className="panels">
 
@@ -188,12 +202,6 @@ export default function App() {
               onChange={v => updateDelayParam('hfDamping', v)} />
             <Knob label="wet mix" min={0} max={1} value={delayParams.wet} defaultValue={0.5} decimals={2}
               onChange={v => updateDelayParam('wet', v)} />
-          </div>
-          <div className="meter-row">
-            <span className="meter-label">level</span>
-            <div className="meter-track">
-              <div id="meter-bar" ref={meterBarRef} />
-            </div>
           </div>
         </div>
 

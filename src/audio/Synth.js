@@ -65,15 +65,15 @@ export class Synth {
     return source
   }
 
-  noteOn(freq) {
+  noteOn(freq, velocity = 1) {
     const ctx = getContext()
     this._osc1.frequency.setTargetAtTime(freq, ctx.currentTime, 0.01)
     this._osc1.detune.setTargetAtTime(this._detuneCents, ctx.currentTime, 0.01)
     this._osc2.frequency.setTargetAtTime(freq / 2, ctx.currentTime, 0.01)
     this._osc2.detune.setTargetAtTime(-this._detuneCents, ctx.currentTime, 0.01)
     this._vca.gain.cancelScheduledValues(ctx.currentTime)
-    this._vca.gain.setValueAtTime(this._vca.gain.value, ctx.currentTime)
-    this._vca.gain.linearRampToValueAtTime(1, ctx.currentTime + this._attack)
+    this._vca.gain.setValueAtTime(0, ctx.currentTime)
+    this._vca.gain.setTargetAtTime(velocity, ctx.currentTime, this._attack / 3)
   }
 
   noteOff() {

@@ -5,8 +5,8 @@ function midiToFreq(midi) {
   return 440 * Math.pow(2, (midi - 69) / 12)
 }
 
-// C2 (36) to B5 (83)
-const KEYS = Array.from({ length: 48 }, (_, i) => {
+// C2 (36) to C6 (84)
+const KEYS = Array.from({ length: 49 }, (_, i) => {
   const midi = 36 + i
   const semitone = midi % 12
   return {
@@ -17,13 +17,19 @@ const KEYS = Array.from({ length: 48 }, (_, i) => {
   }
 })
 
+function keyVelocity(e, key) {
+  const rect = key.getBoundingClientRect()
+  const y = (e.clientY - rect.top) / rect.height
+  return Math.max(0.05, Math.min(1, y))
+}
+
 export function Keyboard({ onNoteOn, onNoteOff, activeMidi }) {
   const onPointerDown = (e) => {
     const key = e.target.closest('[data-midi]')
     if (!key) return
     e.preventDefault()
     const midi = parseInt(key.dataset.midi)
-    onNoteOn?.(midiToFreq(midi), midi)
+    onNoteOn?.(midiToFreq(midi), midi, keyVelocity(e, key))
   }
 
   const onPointerMove = (e) => {
@@ -33,7 +39,7 @@ export function Keyboard({ onNoteOn, onNoteOff, activeMidi }) {
     if (!key) return
     const midi = parseInt(key.dataset.midi)
     if (midi !== activeMidi) {
-      onNoteOn?.(midiToFreq(midi), midi)
+      onNoteOn?.(midiToFreq(midi), midi, keyVelocity(e, key))
     }
   }
 
