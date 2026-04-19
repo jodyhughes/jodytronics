@@ -234,7 +234,7 @@ function Machine({ x, y, w = 270, h = 185, isRunning, leftTapeR = 32, rightTapeR
           <Reel cx={lx} cy={ly} tapeR={leftTapeR}  ccw={true}  isRunning={isRunning} />
         )}
         {(reels === 'both' || reels === 'right') && (
-          <Reel cx={rx} cy={ry} tapeR={rightTapeR} ccw={false} isRunning={isRunning} />
+          <Reel cx={rx} cy={ry} tapeR={rightTapeR} ccw={true} isRunning={isRunning} />
         )}
       </>}
 
