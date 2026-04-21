@@ -110,14 +110,18 @@ export default function App() {
     }
     tick()
 
-    // MIDI
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const enableMidi = useCallback(async () => {
+    await initAudio()
+    if (midiRef.current) return // already enabled
     midiRef.current = new MidiController({
       onNoteOn: (freq, midi, velocity) => {
-        synth.noteOn(freq, velocity, midi)
+        synthRef.current?.noteOn(freq, velocity, midi)
         setActiveMidis(s => new Set([...s, midi]))
       },
       onNoteOff: (midi) => {
-        synth.noteOff(midi)
+        synthRef.current?.noteOff(midi)
         setActiveMidis(s => { const n = new Set(s); n.delete(midi); return n })
       },
       onCc: (cc, value) => {
@@ -125,10 +129,12 @@ export default function App() {
         if (cc === 11) updateDelayParam('wet', value)
       },
     })
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    setMidiEnabled(true)
+  }, [initAudio, updateSynthParam, updateDelayParam])
 
   const [activeMidis, setActiveMidis] = useState(new Set())
   const [isRunning, setIsRunning] = useState(false)
+  const [midiEnabled, setMidiEnabled] = useState(false)
   const [audioLevelDry, setAudioLevelDry] = useState(0)
   const [audioLevelWet, setAudioLevelWet] = useState(0)
 
@@ -196,6 +202,11 @@ export default function App() {
             }}
           />
         </div>
+        <button
+          className={`midi-btn ${midiEnabled ? 'midi-btn--on' : ''}`}
+          onClick={enableMidi}
+          title="Enable MIDI controller"
+        >midi</button>
         <button className="stop-btn" onClick={handleStop}>stop</button>
       </header>
 
