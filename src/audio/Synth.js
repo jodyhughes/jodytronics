@@ -29,11 +29,15 @@ export class Synth {
   }
 
   _allocateVoice(midi) {
-    // Prefer a voice not currently playing
-    const free = this._voices.find(v => v.midi === null)
-    if (free) return free
+    // Prefer a truly idle voice (not playing, not releasing)
+    const idle = this._voices.find(v => v.midi === null && !v._isReleasing)
+    if (idle) return idle
 
-    // Steal the oldest active note
+    // Fall back to a releasing voice rather than cutting an active note
+    const releasing = this._voices.find(v => v._isReleasing)
+    if (releasing) return releasing
+
+    // Last resort: steal the oldest active note
     const oldest = this._voiceOrder[0]
     const stolen = this._noteToVoice.get(oldest)
     this._noteToVoice.delete(oldest)

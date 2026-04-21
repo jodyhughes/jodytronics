@@ -43,6 +43,7 @@ export class Voice {
     this._noiseSource.start()
 
     this.midi = null
+    this._isReleasing = false
   }
 
   _createNoise(ctx) {
@@ -58,27 +59,34 @@ export class Voice {
 
   noteOn(freq, velocity, attack, detuneCents) {
     const ctx = getContext()
-    this.midi = null
+    const now = ctx.currentTime
+    this._isReleasing = false
 
-    this._osc1.frequency.setTargetAtTime(freq, ctx.currentTime, 0.01)
-    this._osc1.detune.setTargetAtTime(detuneCents, ctx.currentTime, 0.01)
-    this._osc2.frequency.setTargetAtTime(freq / 2, ctx.currentTime, 0.01)
-    this._osc2.detune.setTargetAtTime(-detuneCents, ctx.currentTime, 0.01)
+    this._osc1.frequency.setTargetAtTime(freq, now, 0.01)
+    this._osc1.detune.setTargetAtTime(detuneCents, now, 0.01)
+    this._osc2.frequency.setTargetAtTime(freq / 2, now, 0.01)
+    this._osc2.detune.setTargetAtTime(-detuneCents, now, 0.01)
 
-    this._vca.gain.cancelScheduledValues(ctx.currentTime)
-    this._vca.gain.setValueAtTime(0, ctx.currentTime)
+    const startGain = this._vca.gain.value
+    this._vca.gain.cancelScheduledValues(now)
+    this._vca.gain.setValueAtTime(startGain, now)
 
     const N = 256
     const curve = new Float32Array(N)
-    for (let i = 0; i < N; i++) curve[i] = Math.pow(i / (N - 1), 4) * velocity
-    this._vca.gain.setValueCurveAtTime(curve, ctx.currentTime, attack)
+    for (let i = 0; i < N; i++) {
+      const t = Math.pow(i / (N - 1), 4)
+      curve[i] = startGain + (velocity - startGain) * t
+    }
+    this._vca.gain.setValueCurveAtTime(curve, now, attack)
   }
 
   noteOff(release) {
     const ctx = getContext()
-    this._vca.gain.cancelScheduledValues(ctx.currentTime)
-    this._vca.gain.setValueAtTime(this._vca.gain.value, ctx.currentTime)
-    this._vca.gain.setTargetAtTime(0, ctx.currentTime, release / 3)
+    const now = ctx.currentTime
+    this._vca.gain.cancelScheduledValues(now)
+    this._vca.gain.setValueAtTime(this._vca.gain.value, now)
+    this._vca.gain.setTargetAtTime(0, now, release / 3)
     this.midi = null
+    this._isReleasing = true
   }
 }
