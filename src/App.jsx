@@ -10,13 +10,13 @@ import { TapeMachines } from './components/TapeMachines.jsx'
 import { Presets } from './components/Presets.jsx'
 
 const WIDENER_DEFAULTS = {
-  width: 0.4,
+  width: 1.00,
 }
 
 const SYNTH_DEFAULTS = {
   tune: 0,
   detune: 7,
-  subMix: 0.3,
+  subMix: 0.4,
   noise: 0.05,
   cutoff: 800,
   res: 2,
@@ -25,9 +25,9 @@ const SYNTH_DEFAULTS = {
 }
 
 const DELAY_DEFAULTS = {
-  delayTime: 4.0,
+  delayTime: 11.0,
   feedback: 0.5,
-  wowFlutter: 0.2,
+  wowFlutter: 0.1,
   saturation: 20,
   hfDamping: 4000,
   wet: 0.5,
