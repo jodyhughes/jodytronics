@@ -1,11 +1,9 @@
 .tape-machines {
-  margin: 14px auto;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  overflow: hidden;
+  margin: 14px auto 0;
   background: #080d14;
   max-width: 1130px;
   width: 100%;
+  align-self: start;
 }
 
 .reel {

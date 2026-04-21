@@ -35,6 +35,7 @@ body {
 .app {
   display: grid;
   grid-template-rows: auto auto auto auto auto;
+  align-content: start;
   height: 100vh;
   max-width: 1400px;
   margin: 0 auto;
@@ -141,34 +142,48 @@ header h1 {
   grid-template-columns: repeat(6, 1fr);
 }
 
-.header-meter {
+.header-volume {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 120px;
+  align-items: center;
+  gap: 8px;
 }
 
-.meter-label {
+.header-volume-label {
   font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
   color: var(--text-dim);
-  letter-spacing: 0.1em;
   white-space: nowrap;
 }
 
-.meter-track {
-  width: 100%;
-  height: 4px;
-  background: #222;
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 120px;
+  height: 3px;
+  background: #333;
   border-radius: 2px;
-  overflow: hidden;
+  outline: none;
+  cursor: pointer;
 }
 
-#meter-bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(to right, #3a7a20, #e8a020, #e83020);
-  border-radius: 2px;
-  transition: width 50ms linear;
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
 }
 
 /* ── Knob ───────────────────────────────────────────────── */

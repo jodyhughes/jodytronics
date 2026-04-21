@@ -40,7 +40,6 @@ export default function App() {
   const masterGainRef = useRef(null)
   const audioReadyRef = useRef(false)
   const midiRef = useRef(null)
-  const meterBarRef = useRef(null)
 
   const [synthParams, setSynthParams] = useState(SYNTH_DEFAULTS)
   const [delayParams, setDelayParams] = useState(DELAY_DEFAULTS)
@@ -105,9 +104,6 @@ export default function App() {
       let dryPeak = 0, wetPeak = 0
       for (let i = 0; i < dryBuf.length; i++) dryPeak = Math.max(dryPeak, Math.abs(dryBuf[i]))
       for (let i = 0; i < wetBuf.length; i++) wetPeak = Math.max(wetPeak, Math.abs(wetBuf[i]))
-      if (meterBarRef.current) {
-        meterBarRef.current.style.width = Math.min(100, dryPeak * 300) + '%'
-      }
       setAudioLevelDry(Math.min(1, dryPeak * 3))
       setAudioLevelWet(Math.min(1, wetPeak * 3))
       requestAnimationFrame(tick)
@@ -181,41 +177,42 @@ export default function App() {
     <div className="app">
       <header>
         <div className="header-title">
-          <h1>Jodytronics</h1>
+          <h1>JodyTronics</h1>
           <p className="header-subtitle">A web app version of Frippertronics</p>
         </div>
         <div className="header-spacer" />
-        <div className="header-meter">
-          <div className="meter-track">
-            <div id="meter-bar" ref={meterBarRef} />
-          </div>
-          <span className="meter-label">level</span>
+        <div className="header-volume">
+          <label className="header-volume-label">vol</label>
+          <input
+            type="range" min={0} max={1} step={0.01} value={volume}
+            className="volume-slider"
+            onChange={e => {
+              const v = parseFloat(e.target.value)
+              setVolume(v)
+              if (masterGainRef.current) {
+                const gain = v === 0 ? 0 : 0.3 * Math.pow(v, 2.5)
+                masterGainRef.current.gain.setTargetAtTime(gain, masterGainRef.current.context.currentTime, 0.02)
+              }
+            }}
+          />
         </div>
-        <Knob
-          label="vol" min={0} max={1} value={volume} defaultValue={0.8} decimals={2}
-          onChange={v => {
-            setVolume(v)
-            if (masterGainRef.current) {
-              const gain = v === 0 ? 0 : 0.3 * Math.pow(v, 2.5)
-              masterGainRef.current.gain.setTargetAtTime(gain, masterGainRef.current.context.currentTime, 0.02)
-            }
-          }}
-        />
         <button className="stop-btn" onClick={handleStop}>stop</button>
       </header>
 
       <TapeMachines isRunning={isRunning} audioLevelDry={audioLevelDry} audioLevelWet={audioLevelWet} />
 
-      <Presets
-        currentSynth={synthParams}
-        currentDelay={delayParams}
-        currentWidener={widenerParams}
-        onLoad={({ synth, delay, widener }) => {
-          Object.entries(synth).forEach(([k, v]) => updateSynthParam(k, v))
-          Object.entries(delay).forEach(([k, v]) => updateDelayParam(k, v))
-          if (widener) Object.entries(widener).forEach(([k, v]) => updateWidenerParam(k, v))
-        }}
-      />
+      {import.meta.env.DEV && (
+        <Presets
+          currentSynth={synthParams}
+          currentDelay={delayParams}
+          currentWidener={widenerParams}
+          onLoad={({ synth, delay, widener }) => {
+            Object.entries(synth).forEach(([k, v]) => updateSynthParam(k, v))
+            Object.entries(delay).forEach(([k, v]) => updateDelayParam(k, v))
+            if (widener) Object.entries(widener).forEach(([k, v]) => updateWidenerParam(k, v))
+          }}
+        />
+      )}
 
       <div className="panels">
 

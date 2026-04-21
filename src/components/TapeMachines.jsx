@@ -62,13 +62,13 @@ function Reel({ cx, cy, tapeR = 30, ccw = false, isRunning }) {
 
 // phase: 'body' = everything except reels, 'reels' = reels only, default = all
 // reels: 'both' | 'left' | 'right' — which reels are physically present
-function Machine({ x, y, w = 270, h = 210, isRunning, leftTapeR = 32, rightTapeR = 26, audioLevel = 0, phase, reels = 'both' }) {
+function Machine({ x, y, w = 270, h = 185, isRunning, leftTapeR = 32, rightTapeR = 26, audioLevel = 0, phase, reels = 'both' }) {
   const lx = x + 74
-  const ly = y + 96
+  const ly = y + 80
   const rx = x + w - 74
-  const ry = y + 93
+  const ry = y + 77
   const hx = x + w / 2
-  const hy = y + 170
+  const hy = y + 145
 
   const showBody  = !phase || phase === 'body'
   const showReels = !phase || phase === 'reels'
@@ -205,12 +205,12 @@ function Machine({ x, y, w = 270, h = 210, isRunning, leftTapeR = 32, rightTapeR
 }
 
 export function TapeMachines({ isRunning, audioLevelDry = 0, audioLevelWet = 0 }) {
-  const W = 720, H = 235
-  const m1x = 10,  m1y = 22, mw = 268, mh = 210
-  const m2x = 442, m2y = 22
+  const W = 720, H = 193
+  const m1x = 10,  m1y = 4, mw = 268, mh = 185
+  const m2x = 442, m2y = 4
 
-  const m1hx = m1x + mw / 2, m1hy = m1y + 170
-  const m2hx = m2x + mw / 2, m2hy = m2y + 170
+  const m1hx = m1x + mw / 2, m1hy = m1y + 145
+  const m2hx = m2x + mw / 2, m2hy = m2y + 145
   const exitX  = m1hx + 78, exitY  = m1hy + 4
   const entryX = m2hx - 78, entryY = m2hy + 4
   const droopY = Math.max(exitY, entryY) + 10
