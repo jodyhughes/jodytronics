@@ -112,26 +112,6 @@ export default function App() {
 
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const enableMidi = useCallback(async () => {
-    await initAudio()
-    if (midiRef.current) return // already enabled
-    midiRef.current = new MidiController({
-      onNoteOn: (freq, midi, velocity) => {
-        synthRef.current?.noteOn(freq, velocity, midi)
-        setActiveMidis(s => new Set([...s, midi]))
-      },
-      onNoteOff: (midi) => {
-        synthRef.current?.noteOff(midi)
-        setActiveMidis(s => { const n = new Set(s); n.delete(midi); return n })
-      },
-      onCc: (cc, value) => {
-        if (cc === 1) updateSynthParam('cutoff', 200 + value * 7800)
-        if (cc === 11) updateDelayParam('wet', value)
-      },
-    })
-    setMidiEnabled(true)
-  }, [initAudio, updateSynthParam, updateDelayParam])
-
   const [activeMidis, setActiveMidis] = useState(new Set())
   const [isRunning, setIsRunning] = useState(false)
   const [midiEnabled, setMidiEnabled] = useState(false)
@@ -152,6 +132,26 @@ export default function App() {
     setWidenerParams(p => ({ ...p, [key]: value }))
     if (widenerRef.current) widenerRef.current[key] = value
   }, [])
+
+  const enableMidi = useCallback(async () => {
+    await initAudio()
+    if (midiRef.current) return
+    midiRef.current = new MidiController({
+      onNoteOn: (freq, midi, velocity) => {
+        synthRef.current?.noteOn(freq, velocity, midi)
+        setActiveMidis(s => new Set([...s, midi]))
+      },
+      onNoteOff: (midi) => {
+        synthRef.current?.noteOff(midi)
+        setActiveMidis(s => { const n = new Set(s); n.delete(midi); return n })
+      },
+      onCc: (cc, value) => {
+        if (cc === 1) updateSynthParam('cutoff', 200 + value * 7800)
+        if (cc === 11) updateDelayParam('wet', value)
+      },
+    })
+    setMidiEnabled(true)
+  }, [initAudio, updateSynthParam, updateDelayParam])
 
   const handleNoteOn = useCallback(async (freq, midi, velocity = 1) => {
     await initAudio()
