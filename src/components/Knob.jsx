@@ -17,7 +17,11 @@ function arcPath(startAngle, endAngle) {
 }
 
 export function Knob({ label, min, max, value, defaultValue, decimals = 1, unit = '', onChange }) {
-  const dragRef = useRef(null)
+  const dragRef  = useRef(null)
+  const glowStyle = useRef({
+    '--glow-duration': `${2.5 + Math.random() * 4}s`,
+    '--glow-delay':    `${-(Math.random() * 6)}s`,
+  })
 
   const t = (value - min) / (max - min)
   const angle = START + t * (END - START)
@@ -40,11 +44,12 @@ export function Knob({ label, min, max, value, defaultValue, decimals = 1, unit 
   }
 
   const onPointerUp = () => { dragRef.current = null }
+  const onLostPointerCapture = () => { dragRef.current = null }
 
   const onDoubleClick = () => { onChange?.(defaultValue ?? min) }
 
   return (
-    <div className="knob">
+    <div className="knob" style={glowStyle.current}>
       <svg
         width={SIZE}
         height={SIZE}
@@ -52,11 +57,14 @@ export function Knob({ label, min, max, value, defaultValue, decimals = 1, unit 
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
+        onLostPointerCapture={onLostPointerCapture}
         onDoubleClick={onDoubleClick}
       >
-        <path d={arcPath(START, END)} fill="none" stroke="#333" strokeWidth="3" strokeLinecap="round" />
-        <path d={arcPath(START, angle)} fill="none" stroke="#e8a020" strokeWidth="3" strokeLinecap="round" />
-        <circle cx={dotX} cy={dotY} r="3" fill="#e8a020" />
+        <path d={arcPath(START, END)} fill="none" stroke="var(--knob-track)" strokeWidth="3" strokeLinecap="round" />
+        <g className="knob-glow-group">
+          <path d={arcPath(START, angle)} fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" />
+          <circle cx={dotX} cy={dotY} r="3" fill="var(--accent)" />
+        </g>
       </svg>
       <div className="knob-value">{display}</div>
       <div className="knob-label">{label}</div>

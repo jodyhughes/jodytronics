@@ -1,19 +1,204 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #0e0e0e;
-  --panel: #000000;
-  --panel-dark: #e8ead8;  
-  --panel-text: #e8ead8;
-  --panel-text-dim: #b8c8a4;
-  --border: #2a2a2a;
-  --accent: #e8a020;
-  --accent-dim: #7a5010;
-  --text: #c8c8c8;
-  --text-dim: #666;
-  --white-key: #d8d0c8;
-  --black-key: #1a1a1a;
-  --key-active: #e8a020;
+  /* ── UI chrome ── */
+  --bg:              #0e0e0e;
+  --panel:           #000000;
+  --panel-dark:      #e8ead8;
+  --panel-text:      #e8ead8;
+  --panel-text-dim:  #b8c8a4;
+  --border:          #2a2a2a;
+  --accent:          #e8a020;
+  --accent-dim:      #7a5010;
+  --text:            #c8c8c8;
+  --text-dim:        #666;
+  --white-key:       #d8d0c8;
+  --black-key:       #1a1a1a;
+  --key-active:      #e8a020;
+  --indicator-on:    #40c060;
+  --indicator-on-hi: #60e080;
+  --danger:          #e83020;
+  --knob-track:      #333;
+
+  /* ── Machine body ── */
+  --machine-bg:           #080d14;
+  --machine-body:         #1c2a42;
+  --machine-body-stroke:  #2a3e5a;
+
+  /* ── Bottom strip ── */
+  --strip-1: #7a1a1a;
+  --strip-2: #cc3318;
+  --strip-3: #e06020;
+
+  /* ── Tape ── */
+  --tape:        #7a3c1e;
+  --tape-stroke: #a85030;
+  --tape-travel: #7a4228;
+
+  /* ── Power LED ── */
+  --led-on:  #37c957;
+  --led-off: #d73a3a;
+
+  /* ── VU meter ── */
+  --vu-low:        #d73a3a;
+  --vu-mid:        #f4b642;
+  --vu-high:       #43d855;
+  --vu-bg:         #1a2534;
+  --meter-housing: #101826;
+  --meter-inner:   #15203f;
+
+  /* ── Reel plate ── */
+  --reel-plate-lo:  #828890;
+  --reel-plate-mid: #aaafb8;
+  --reel-plate-hi:  #d4d8de;
+  --reel-rim:       #b4bac2;
+  --reel-edge:      #505864;
+  --reel-hub-lo:    #090b0e;
+  --reel-hub-hi:    #222630;
+
+  /* ── Head assembly ── */
+  --head-gap:       #b87820;
+  --head-gap-shine: #ffbe50;
+}
+
+.theme-psychedelic .machine-op-art {
+  display: block;
+  opacity: 1;
+  mix-blend-mode: screen;
+}
+
+
+
+.theme-vector .knob-glow-group {
+  filter: drop-shadow(0 0 2px var(--accent)) drop-shadow(0 0 5px var(--accent));
+  animation: knob-glow-pulse var(--glow-duration, 3s) ease-in-out var(--glow-delay, 0s) infinite;
+}
+
+@keyframes knob-glow-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
+}
+
+.theme-vector {
+  /* ── UI chrome ── */
+  --bg:              #000000;
+  --panel:           #000000;
+  --panel-dark:      #00ccaa;
+  --panel-text:      #00ffcc;
+  --panel-text-dim:  #00997a;
+  --border:          #004433;
+  --accent:          #00ffcc;
+  --accent-dim:      #007755;
+  --text:            #00ffcc;
+  --text-dim:        #006644;
+  --white-key:       #001a14;
+  --black-key:       #000000;
+  --key-active:      #00ffcc;
+  --indicator-on:    #00ff41;
+  --indicator-on-hi: #80ff90;
+  --danger:          #ff0040;
+  --knob-track:      #003322;
+
+  /* ── Machine body ── */
+  --machine-bg:          #000000;
+  --machine-body:        #000000;
+  --machine-body-stroke: #00ccaa;
+
+  /* ── Bottom strip ── */
+  --strip-1: #ff0080;
+  --strip-2: #ff6000;
+  --strip-3: #ffee00;
+
+  /* ── Tape ── */
+  --tape:        #cc0000;
+  --tape-stroke: #ff2200;
+  --tape-travel: #cc0000;
+
+  /* ── Power LED ── */
+  --led-on:  #00ff41;
+  --led-off: #ff0040;
+
+  /* ── VU meter ── */
+  --vu-low:        #ff0040;
+  --vu-mid:        #ffee00;
+  --vu-high:       #00ff41;
+  --vu-bg:         #001108;
+  --meter-housing: #000000;
+  --meter-inner:   #000a04;
+
+  /* ── Reel plate ── */
+  --reel-plate-lo:  #004444;
+  --reel-plate-mid: #006666;
+  --reel-plate-hi:  #009999;
+  --reel-rim:       #00cccc;
+  --reel-edge:      #004444;
+  --reel-hub-lo:    #000000;
+  --reel-hub-hi:    #002233;
+
+  /* ── Head assembly ── */
+  --head-gap:       #ff8000;
+  --head-gap-shine: #ffdd00;
+}
+
+.theme-psychedelic {
+  /* ── UI chrome ── */
+  --bg:              #0d0020;
+  --panel:           #120028;
+  --panel-dark:      #ff00cc;
+  --panel-text:      #ffdd00;
+  --panel-text-dim:  #cc9900;
+  --border:          #440066;
+  --accent:          #ffdd00;
+  --accent-dim:      #886600;
+  --text:            #ffdd00;
+  --text-dim:        #886600;
+  --white-key:       #2a0044;
+  --black-key:       #0d0020;
+  --key-active:      #ffdd00;
+  --indicator-on:    #44ff88;
+  --indicator-on-hi: #88ffaa;
+  --danger:          #ff2244;
+  --knob-track:      #330044;
+
+  /* ── Machine body ── */
+  --machine-bg:          #0a001a;
+  --machine-body:        #1a0035;
+  --machine-body-stroke: #cc00ff;
+
+  /* ── Bottom strip ── */
+  --strip-1: #ff6600;
+  --strip-2: #ff00cc;
+  --strip-3: #6600ff;
+
+  /* ── Tape ── */
+  --tape:        #ff6600;
+  --tape-stroke: #ffaa44;
+  --tape-travel: #ff6600;
+
+  /* ── Power LED ── */
+  --led-on:  #44ff88;
+  --led-off: #ff2244;
+
+  /* ── VU meter ── */
+  --vu-low:        #ff2244;
+  --vu-mid:        #ffcc00;
+  --vu-high:       #44ff88;
+  --vu-bg:         #1a0030;
+  --meter-housing: #0d0020;
+  --meter-inner:   #150028;
+
+  /* ── Reel plate ── */
+  --reel-plate-lo:  #440066;
+  --reel-plate-mid: #7700bb;
+  --reel-plate-hi:  #aa00ff;
+  --reel-rim:       #cc44ff;
+  --reel-edge:      #440066;
+  --reel-hub-lo:    #0d0020;
+  --reel-hub-hi:    #220040;
+
+  /* ── Head assembly ── */
+  --head-gap:       #ff6600;
+  --head-gap-shine: #ffcc44;
 }
 
 html, body, #root {
@@ -93,7 +278,7 @@ header h1 {
   transition: border-color 120ms, color 120ms;
 }
 .midi-btn:hover { border-color: var(--accent); color: var(--accent); }
-.midi-btn--on  { border-color: #40c060; color: #40c060; cursor: default; }
+.midi-btn--on  { border-color: var(--indicator-on); color: var(--indicator-on); cursor: default; }
 
 .stop-btn {
   margin-left: auto;
@@ -111,9 +296,46 @@ header h1 {
 }
 
 .stop-btn:hover {
-  border-color: #e83020;
-  color: #e83020;
+  border-color: var(--danger);
+  color: var(--danger);
 }
+
+.fullscreen-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 120ms, color 120ms;
+  flex-shrink: 0;
+}
+.fullscreen-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.theme-switcher {
+  display: flex;
+  gap: 4px;
+}
+
+.theme-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 120ms, color 120ms;
+}
+.theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+.theme-btn--active { border-color: var(--accent); color: var(--accent); cursor: default; }
 
 .panels {
   display: grid;
@@ -121,6 +343,14 @@ header h1 {
   gap: 8px;
   margin: 16px 0;
   align-self: start;
+}
+
+.panel-row {
+  display: flex;
+  gap: 8px;
+}
+.panel-row > .panel {
+  flex: 1;
 }
 
 .panel {
@@ -138,7 +368,60 @@ header h1 {
   text-transform: uppercase;
   color: var(--panel-text-dim);
   margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
+.panel--collapsed .panel-title {
+  margin-bottom: 0;
+}
+
+.collapse-btn {
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  margin-left: auto;
+  margin-right: -8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.4;
+  transition: opacity 120ms;
+  flex-shrink: 0;
+}
+.collapse-btn:hover { opacity: 0.9; }
+
+.collapse-arrow {
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--panel-text-dim);
+  transition: transform 200ms ease;
+}
+.panel--collapsed .collapse-arrow {
+  transform: rotate(-90deg);
+}
+
+.fx-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 8px;
+  font-family: inherit;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 120ms, color 120ms;
+  line-height: 1.6;
+}
+.fx-btn:hover { border-color: var(--accent); color: var(--accent); }
+.fx-btn--on   { border-color: var(--indicator-on); color: var(--indicator-on); }
+.fx-btn--on:hover { border-color: var(--indicator-on-hi); color: var(--indicator-on-hi); }
 
 .panel .knob-label {
   color: var(--panel-text-dim);
@@ -156,6 +439,10 @@ header h1 {
 
 .knobs-grid--3 {
   grid-template-columns: repeat(6, 1fr);
+}
+
+.knobs-grid--4 {
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .header-volume {
@@ -177,7 +464,7 @@ header h1 {
   appearance: none;
   width: 120px;
   height: 3px;
-  background: #333;
+  background: var(--knob-track);
   border-radius: 2px;
   outline: none;
   cursor: pointer;
