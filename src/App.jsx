@@ -245,6 +245,7 @@ export default function App() {
 
   const [isFullscreen, setIsFullscreen] = useState(false)
 
+
   useEffect(() => {
     const onChange = () => setIsFullscreen(!!document.fullscreenElement)
     document.addEventListener('fullscreenchange', onChange)
