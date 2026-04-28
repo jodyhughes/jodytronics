@@ -76,7 +76,7 @@
 
 @keyframes knob-glow-pulse {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0.25; }
+  50%       { opacity: 0.5; }
 }
 
 .theme-vector {
@@ -222,6 +222,7 @@ body {
   grid-template-rows: auto auto auto auto auto;
   align-content: start;
   height: 100vh;
+  height: 100dvh;
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 32px;
@@ -374,6 +375,9 @@ header h1 {
 }
 .panel--collapsed .panel-title {
   margin-bottom: 0;
+}
+.panel--collapsed {
+  cursor: pointer;
 }
 
 .collapse-btn {
@@ -528,6 +532,7 @@ header h1 {
 footer {
   border-top: 1px solid var(--border);
   padding: 14px 0 20px;
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
   display: flex;
 }
 
@@ -535,6 +540,7 @@ footer {
   display: flex;
   width: 100%;
   height: 110px;
+  touch-action: none;
 }
 
 .key {
@@ -563,4 +569,83 @@ footer {
 
 .key--active {
   background: var(--key-active) !important;
+}
+
+/* ── Keyboard black-key scaling ─────────────────────────── */
+
+/* 3-octave range (500–749px): 21 white keys */
+@media (min-width: 500px) and (max-width: 749px) {
+  .key--black {
+    flex: 0 0 2.86%;
+    margin-left: -1.43%;
+    margin-right: -1.43%;
+  }
+}
+
+/* 2-octave range (< 500px): 14 white keys */
+@media (max-width: 499px) {
+  .key--black {
+    flex: 0 0 4.29%;
+    margin-left: -2.14%;
+    margin-right: -2.14%;
+  }
+}
+
+/* ── Mobile ─────────────────────────────────────────────── */
+
+@media (max-width: 750px) {
+  .app {
+    padding: 0 12px;
+  }
+
+  header {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 0;
+  }
+
+  .header-title {
+    flex: 1;
+    min-width: 0;
+  }
+
+  header h1 {
+    font-size: 17px;
+  }
+
+  .header-subtitle {
+    display: none;
+  }
+
+  /* Theme buttons wrap to a second row */
+  .theme-switcher {
+    order: 10;
+    width: 100%;
+    border-top: 1px solid var(--border);
+    padding-top: 6px;
+  }
+
+  .header-spacer {
+    display: none;
+  }
+
+  /* Not supported on iOS */
+  .fullscreen-btn,
+  .midi-btn {
+    display: none;
+  }
+
+  .volume-slider {
+    width: 80px;
+  }
+
+  /* 8 knobs → 4 per row */
+  .knobs-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* Phaser + Reverb panels stack vertically */
+  .panel-row {
+    flex-direction: column;
+  }
 }

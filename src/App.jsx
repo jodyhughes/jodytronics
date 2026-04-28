@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { resumeContext } from './audio/audioContext.js'
+import { resumeContext, touchUnlock } from './audio/audioContext.js'
 import { Synth } from './audio/Synth.js'
 import { TapeDelay } from './audio/TapeDelay.js'
 import { StereoWidener } from './audio/StereoWidener.js'
@@ -67,7 +67,7 @@ export default function App() {
   const [reverbParams, setReverbParams] = useState(REVERB_DEFAULTS)
   const [widenerParams, setWidenerParams] = useState(WIDENER_DEFAULTS)
   const [volume, setVolume] = useState(0.8)
-  const [phaserEnabled, setPhaserEnabled] = useState(true)
+  const [phaserEnabled, setPhaserEnabled] = useState(false)
   const [reverbEnabled, setReverbEnabled] = useState(true)
   const [collapsed, setCollapsed] = useState({ phaser: true, reverb: true })
   const toggleCollapse = useCallback((id) => setCollapsed(s => ({ ...s, [id]: !s[id] })), [])
@@ -224,6 +224,7 @@ export default function App() {
   }, [initAudio, updateSynthParam, updateDelayParam])
 
   const handleNoteOn = useCallback(async (freq, midi, velocity = 1) => {
+    touchUnlock() // synchronous iOS gesture unlock, must precede any await
     await initAudio()
     synthRef.current?.noteOn(freq, velocity, midi)
     setActiveMidis(s => new Set([...s, midi]))
@@ -252,9 +253,9 @@ export default function App() {
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen()
+      document.documentElement.requestFullscreen?.()?.catch?.(() => {})
     } else {
-      document.exitFullscreen()
+      document.exitFullscreen?.()
     }
   }, [])
 
@@ -328,10 +329,10 @@ export default function App() {
 
       <div className="panels">
 
-        <div className={`panel${collapsed['delay'] ? ' panel--collapsed' : ''}`} id="delay-panel">
+        <div className={`panel${collapsed['delay'] ? ' panel--collapsed' : ''}`} id="delay-panel" onClick={() => { if (collapsed['delay']) toggleCollapse('delay') }}>
           <div className="panel-title">
             Tape Delay
-            <button className="collapse-btn" onClick={() => toggleCollapse('delay')} aria-label="collapse">
+            <button className="collapse-btn" onClick={(e) => { e.stopPropagation(); toggleCollapse('delay') }} aria-label="collapse">
               <span className="collapse-arrow" />
             </button>
           </div>
@@ -356,13 +357,13 @@ export default function App() {
         </div>
 
         <div className="panel-row">
-          <div className={`panel${collapsed['phaser'] ? ' panel--collapsed' : ''}`} id="phaser-panel">
+          <div className={`panel${collapsed['phaser'] ? ' panel--collapsed' : ''}`} id="phaser-panel" onClick={() => { if (collapsed['phaser']) toggleCollapse('phaser') }}>
             <div className="panel-title">
               Phaser
-              <button className={`fx-btn ${phaserEnabled ? 'fx-btn--on' : ''}`} onClick={togglePhaser}>
+              <button className={`fx-btn ${phaserEnabled ? 'fx-btn--on' : ''}`} onClick={(e) => { e.stopPropagation(); togglePhaser() }}>
                 {phaserEnabled ? 'on' : 'off'}
               </button>
-              <button className="collapse-btn" onClick={() => toggleCollapse('phaser')} aria-label="collapse">
+              <button className="collapse-btn" onClick={(e) => { e.stopPropagation(); toggleCollapse('phaser') }} aria-label="collapse">
                 <span className="collapse-arrow" />
               </button>
             </div>
@@ -380,13 +381,13 @@ export default function App() {
             )}
           </div>
 
-          <div className={`panel${collapsed['reverb'] ? ' panel--collapsed' : ''}`} id="reverb-panel">
+          <div className={`panel${collapsed['reverb'] ? ' panel--collapsed' : ''}`} id="reverb-panel" onClick={() => { if (collapsed['reverb']) toggleCollapse('reverb') }}>
             <div className="panel-title">
               Reverb
-              <button className={`fx-btn ${reverbEnabled ? 'fx-btn--on' : ''}`} onClick={toggleReverb}>
+              <button className={`fx-btn ${reverbEnabled ? 'fx-btn--on' : ''}`} onClick={(e) => { e.stopPropagation(); toggleReverb() }}>
                 {reverbEnabled ? 'on' : 'off'}
               </button>
-              <button className="collapse-btn" onClick={() => toggleCollapse('reverb')} aria-label="collapse">
+              <button className="collapse-btn" onClick={(e) => { e.stopPropagation(); toggleCollapse('reverb') }} aria-label="collapse">
                 <span className="collapse-arrow" />
               </button>
             </div>
@@ -405,10 +406,10 @@ export default function App() {
           </div>
         </div>
 
-        <div className={`panel${collapsed['synth'] ? ' panel--collapsed' : ''}`} id="synth-panel">
+        <div className={`panel${collapsed['synth'] ? ' panel--collapsed' : ''}`} id="synth-panel" onClick={() => { if (collapsed['synth']) toggleCollapse('synth') }}>
           <div className="panel-title">
             Synthesizer
-            <button className="collapse-btn" onClick={() => toggleCollapse('synth')} aria-label="collapse">
+            <button className="collapse-btn" onClick={(e) => { e.stopPropagation(); toggleCollapse('synth') }} aria-label="collapse">
               <span className="collapse-arrow" />
             </button>
           </div>

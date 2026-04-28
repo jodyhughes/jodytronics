@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 const BLACK_SEMITONES = new Set([1, 3, 6, 8, 10])
@@ -7,17 +7,25 @@ function midiToFreq(midi) {
   return 440 * Math.pow(2, (midi - 69) / 12)
 }
 
-// C2 (36) to C6 (84)
-const KEYS = Array.from({ length: 49 }, (_, i) => {
-  const midi = 36 + i
-  const semitone = midi % 12
-  return {
-    midi,
-    semitone,
-    black: BLACK_SEMITONES.has(semitone),
-    label: NOTE_NAMES[semitone] + Math.floor(midi / 12 - 1),
-  }
-})
+function makeKeys(startMidi, endMidi) {
+  return Array.from({ length: endMidi - startMidi + 1 }, (_, i) => {
+    const midi = startMidi + i
+    const semitone = midi % 12
+    return { midi, semitone, black: BLACK_SEMITONES.has(semitone), label: NOTE_NAMES[semitone] + Math.floor(midi / 12 - 1) }
+  })
+}
+
+function useKeyRange() {
+  const [width, setWidth] = useState(() => window.innerWidth)
+  useEffect(() => {
+    const onResize = () => setWidth(window.innerWidth)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+  if (width < 500) return { start: 48, end: 71 } // C3–B4, 2 octaves
+  if (width < 750) return { start: 48, end: 83 } // C3–B5, 3 octaves
+  return { start: 36, end: 84 }                  // C2–C6, 4 octaves
+}
 
 function keyVelocity(e, key) {
   const rect = key.getBoundingClientRect()
@@ -26,7 +34,8 @@ function keyVelocity(e, key) {
 }
 
 export function Keyboard({ onNoteOn, onNoteOff, activeMidis }) {
-  // Track which midi note each pointer is holding, for correct per-finger noteOff
+  const { start, end } = useKeyRange()
+  const keys = makeKeys(start, end)
   const pointerNoteRef = useRef(new Map())
 
   const onPointerDown = (e) => {
@@ -67,7 +76,7 @@ export function Keyboard({ onNoteOn, onNoteOff, activeMidis }) {
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
-      {KEYS.map(({ midi, black, label }) => (
+      {keys.map(({ midi, black, label }) => (
         <div
           key={midi}
           className={`key ${black ? 'key--black' : 'key--white'} ${activeMidis?.has(midi) ? 'key--active' : ''}`}
