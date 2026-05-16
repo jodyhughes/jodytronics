@@ -19,8 +19,8 @@ function arcPath(startAngle, endAngle) {
 export function Knob({ label, min, max, value, defaultValue, decimals = 1, unit = '', onChange }) {
   const dragRef  = useRef(null)
   const glowStyle = useRef({
-    '--glow-duration': `${2.5 + Math.random() * 4}s`,
-    '--glow-delay':    `${-(Math.random() * 6)}s`,
+    '--glow-duration': `${6 + Math.random() * 8}s`,
+    '--glow-delay':    `${-(Math.random() * 14)}s`,
   })
 
   const t = (value - min) / (max - min)

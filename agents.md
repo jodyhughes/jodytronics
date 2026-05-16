@@ -1,49 +1,50 @@
-# Project Setup for Jodytronics
+# jodytronics — Agent Context
 
-## Overview
-This is a Vite-powered React application using ECMAScript modules.
+## Project
+Browser-based synthesizer and tape loop instrument inspired by Frippertronics (Robert Fripp's tape delay technique). Deployed at jodytronics.jodyhughes.com on AWS Amplify.
 
 ## Commands
+
 ```bash
-npm run dev      # Start dev server at http://localhost:5173/
+npm run dev      # Start Vite dev server at http://localhost:5173/
 npm run build    # Build to dist/
 npm run preview  # Preview production build locally
+npm run lint     # ESLint
 ```
 
-## Package and Scripts
-- `package.json`
-  - `name`: `jodytronics`
-  - `private`: `true`
-  - `version`: `0.0.0`
-  - `type`: `module`
+Requires Node 20+. No test suite.
 
-- Scripts:
-  - `dev`: `vite`
-  - `build`: `vite build`
-  - `preview`: `vite preview`
-  - `lint`: `eslint .`
+## Architecture
 
-## Dependencies
-- `react` `^19.2.4`
-- `react-dom` `^19.2.4`
+React + Vite app. All audio runs through the Web Audio API — no external audio libraries.
 
-## Dev Dependencies
-- `vite` `^8.0.0`
-- `@vitejs/plugin-react` `^6.0.0`
-- `eslint` `^9.39.4`
-- `@eslint/js` `^9.39.4`
-- `eslint-plugin-react-hooks` `^7.0.1`
-- `eslint-plugin-react-refresh` `^0.5.2`
-- `globals` `^17.4.0`
-- `@types/react` `^19.2.14`
-- `@types/react-dom` `^19.2.3`
+**Signal chain:**
+```
+Synth → TapeDelay → Phaser → Reverb → StereoWidener → MasterGain → Limiter → destination
+```
 
-## Vite Configuration
-- `vite.config.js` imports `defineConfig` from `vite`
-- Uses `@vitejs/plugin-react`
-- Exports default config with `plugins: [react()]`
+**Audio modules** (`src/audio/`):
+- `audioContext.js` — shared singleton `AudioContext`; `resumeContext()` handles the browser autoplay gate
+- `Synth.js` — 8-voice polyphonic subtractive synth; voices are pooled and stolen oldest-first; params: tune, detune, subMix, noise, cutoff, res, attack, release
+- `Voice.js` — single voice: dual detuned oscillators + sub-osc + noise, lowpass filter, ADSR envelope
+- `TapeDelay.js` — tape delay with wow/flutter (LFO-modulated delay time), waveshaper saturation, HF damping, DC blocker, feedback loop. `stop()` clears the delay buffer by swapping in a fresh `DelayNode`
+- `Phaser.js` — all-pass phaser with LFO rate/depth/center controls
+- `Reverb.js` — convolution reverb with decay, damping, pre-delay
+- `StereoWidener.js` — mid/side stereo width control
+- `MidiController.js` — Web MIDI API; CC1 → cutoff, CC11 → delay wet
+- `presets.js` — named preset bank (only shown in dev mode)
 
-## Key Notes
-- The app is configured for modern React with Vite and ES modules.
-- ESLint is available through `npm run lint`.
-- Build, dev server, and preview are all handled by Vite.
+**Components** (`src/components/`):
+- `Keyboard.jsx` — on-screen piano keyboard; fires `onNoteOn` / `onNoteOff`
+- `Knob.jsx` — rotary knob control; drag to adjust, double-click to reset to default
+- `TapeMachines.jsx` — animated reel-to-reel tape machine UI with VU meters (dry left, wet right)
+- `OpArtCanvas.jsx` — animated op-art background canvas
+- `Presets.jsx` / `Presets.css` — dev-only preset loader/saver panel
+
+**Themes:** `default`, `vector`, `psychedelic` — toggled via `theme-btn` in the header; applied as a CSS class on `.app`
+
+**Panels:** Tape Delay, Phaser, Reverb, Synthesizer — each collapsible. All knob values are wired live to their audio node via setters (no re-render needed for audio updates).
+
+## Deployment
+
+AWS Amplify connected to GitHub. Push to `main` triggers build and deploy automatically.
